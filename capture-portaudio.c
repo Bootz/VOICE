@@ -104,8 +104,8 @@ int read_stream()
 
 
     for(;;) {
-        //e = Pa_ReadStream(stream, buffer, sampleBufferSize);
-        //w = write(stdout, buffer, sizeof(buffer));
+        e = Pa_ReadStream(stream, buffer, sampleBufferSize);
+        w = fwrite(buffer, 1, sizeof(buffer), stdout);
 
         // todo resume writing if less than sizeof(buffer) bytes are written
 
