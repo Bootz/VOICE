@@ -21,7 +21,8 @@ int main()
     // TODO: select device ; allow selecting default
 
 
-    PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(Pa_GetDefaultInputDevice());
+    const PaDeviceInfo* deviceInfo =
+      Pa_GetDeviceInfo(Pa_GetDefaultInputDevice());
     int dev = Pa_HostApiDeviceIndexToDeviceIndex(Pa_GetDefaultHostApi()
                                        , Pa_GetDefaultInputDevice());
 
@@ -44,7 +45,7 @@ int enumerate_apis()
 
     for(ai = 0; ai < Pa_GetHostApiCount(); ai++) {
 
-        PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(ai);
+        const PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(ai);
 
         fprintf(stderr, "API: %s, devs: %d\n"
                 , apiInfo->name
@@ -52,7 +53,7 @@ int enumerate_apis()
 
         for(di = 0; di < apiInfo->deviceCount; di++) {
             int deviceIndex = Pa_HostApiDeviceIndexToDeviceIndex(ai, di);
-            PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+            const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
 
             fprintf(stderr, "%d    DEV: %s, in: %d, out: %d\n"
                     , selectIndex++
