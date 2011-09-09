@@ -1,47 +1,65 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 
 #include <portaudio.h>
 
+#define sampleRate 8000.0 * 2
+#define sampleBufferSize 1000
 
-#define sampleBufferSize 4000
+#define playDirection 1
+#define recDirection -1
 
 PaStream *stream;
+int direction = playDirection;
 
 
-
-int main()
+int main(int argc, char** argv)
 {
     Pa_Initialize();
 
     fprintf(stderr, "PortAudio version: %s\n", Pa_GetVersionText());
 
-    enumerate_apis();
+    int dev;
 
-    // TODO: select device ; allow selecting default
+    if(argc >= 2) {
+        if(strcmp(argv[1], "list-devices") == 0) {
+            enumerate_apis();
+            return;
+        } else if(sscanf(argv[1], "%i", &dev) != 1) {
+            fprintf(stderr, "Malformed device id\n");
+        }
+    } else {
+        dev = Pa_HostApiDeviceIndexToDeviceIndex(Pa_GetDefaultHostApi()
+                                                 , Pa_GetDefaultInputDevice());
+    }
 
+    if (argc >= 3) {
+        if(strcmp(argv[2], "play") == 0) {
+            direction = playDirection;
+        } else if(strcmp(argv[2], "rec") == 0) {
+            direction = recDirection;
+        } else {
+            fprintf(stderr, "no direction given\n");
+            return 1;
+        }
+    }
 
-    const PaDeviceInfo* deviceInfo =
-      Pa_GetDeviceInfo(Pa_GetDefaultInputDevice());
-    int dev = Pa_HostApiDeviceIndexToDeviceIndex(Pa_GetDefaultHostApi()
-                                       , Pa_GetDefaultInputDevice());
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(dev);
 
     open_capture_stream(dev
                         , deviceInfo->defaultLowInputLatency
-                        , 8000.0);
+                        , sampleRate);
 
-    read_stream();
+    direction == playDirection ? write_stream() : read_stream();
 
     Pa_Terminate();
 }
-
 
 int enumerate_apis()
 {
     int ai; // api index
     int di; // device index
-
-    int selectIndex = 1;
 
     for(ai = 0; ai < Pa_GetHostApiCount(); ai++) {
 
@@ -56,7 +74,7 @@ int enumerate_apis()
             const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
 
             fprintf(stderr, "%d    DEV: %s, in: %d, out: %d\n"
-                    , selectIndex++
+                    , deviceIndex
                     , deviceInfo->name
                     , deviceInfo->maxInputChannels
                     , deviceInfo->maxOutputChannels);
@@ -67,20 +85,30 @@ int enumerate_apis()
     return 0;
 }
 
-int open_capture_stream(int deviceIndex, double latency, double sampleRate)
+int open_capture_stream(int deviceIndex, double latency, double rate)
 {
-    PaStreamParameters inParams;
+    PaStreamParameters inParams = {
+        .device = deviceIndex,
+        .sampleFormat = paInt16,
+        .channelCount = 1,
+        .suggestedLatency = latency,
+        .hostApiSpecificStreamInfo = NULL
+    };
 
-    inParams.device = deviceIndex;
-    inParams.sampleFormat = paInt16; // check with PulseAudio for compat
-    inParams.channelCount = 1;
-    inParams.suggestedLatency = latency;
-    inParams.hostApiSpecificStreamInfo = NULL;
+
+    PaStreamParameters outParams = {
+        .device = deviceIndex,
+        .sampleFormat = paInt16,
+        .channelCount = 1,
+        .suggestedLatency = latency,
+        .hostApiSpecificStreamInfo = NULL
+    };
+
 
     PaError err = Pa_OpenStream(&stream
-                                , &inParams
-                                , NULL
-                                , sampleRate
+                                , direction == recDirection ? &inParams : NULL
+                                , direction == playDirection ? &outParams : NULL
+                                , rate
                                 , 0 // framesPerBuffer
                                 , paNoFlag // flags
                                 , NULL
@@ -99,9 +127,8 @@ int read_stream()
 {
     char buffer[sizeof(uint16_t) * sampleBufferSize];
 
-
     PaError e;
-    ssize_t w;
+    size_t w;
 
     Pa_StartStream(stream);
 
@@ -118,4 +145,30 @@ int read_stream()
             return e;
         }
     }
+}
+
+int write_stream()
+{
+    char buffer[sizeof(uint16_t) * sampleBufferSize];
+
+    PaError e;
+    size_t r;
+
+    Pa_StartStream(stream);
+
+    for(;;) {
+        r = fread(buffer, 1, sizeof(buffer), stdin);
+        e = Pa_WriteStream(stream, buffer, sampleBufferSize);
+
+        // todo resume writing if less than sizeof(buffer) bytes are written
+
+        if(e != paNoError) {
+            fprintf(stderr, "PortAudio error while writing to stream: %s\n"
+                    , Pa_GetErrorText(e));
+
+            return e;
+        }
+    }
+
+
 }
