@@ -103,6 +103,7 @@ int read_stream()
     PaError e;
     ssize_t w;
 
+    Pa_StartStream(stream);
 
     for(;;) {
         e = Pa_ReadStream(stream, buffer, sampleBufferSize);
