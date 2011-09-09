@@ -28,7 +28,7 @@ int main()
 
     open_capture_stream(dev
                         , deviceInfo->defaultLowInputLatency
-                        , 8000.);
+                        , 8000.0);
 
     read_stream();
 
