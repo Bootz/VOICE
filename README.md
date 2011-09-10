@@ -12,4 +12,6 @@ See build.sh, just compiling everything while linking to the needed libs.
 Using
 =====
 
-See run.sh for echo test
+see run.sh
+
+
