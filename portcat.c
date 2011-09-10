@@ -5,7 +5,7 @@
 #include <portaudio.h>
 
 #define sampleRate 8000.0 * 2
-#define sampleBufferSize 1000
+#define sampleBufferSize 100
 
 #define playDirection 1
 #define recDirection -1
@@ -133,7 +133,10 @@ int read_stream()
     Pa_StartStream(stream);
 
     for(;;) {
-        e = Pa_ReadStream(stream, buffer, sampleBufferSize);
+        do {
+            e = Pa_ReadStream(stream, buffer, sampleBufferSize);
+        } while(e == paOutputUnderflowed);
+
         w = fwrite(buffer, 1, sizeof(buffer), stdout);
 
         // todo resume writing if less than sizeof(buffer) bytes are written
