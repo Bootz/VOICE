@@ -5,7 +5,6 @@
 #include <portaudio.h>
 
 #define sampleRate 8000.0 * 2
-#define sampleBufferSize 100
 
 #define playDirection 1
 #define recDirection -1
@@ -51,9 +50,11 @@ int main(int argc, char** argv)
                         , deviceInfo->defaultLowInputLatency
                         , sampleRate);
 
-    direction == playDirection ? write_stream() : read_stream();
+    Pa_StartStream(stream);
 
-    Pa_Terminate();
+    for(;;) {
+        Pa_Sleep(10000);
+    }
 }
 
 int enumerate_apis()
@@ -85,6 +86,27 @@ int enumerate_apis()
     return 0;
 }
 
+int stream_callback(const void *input
+                , void *output
+                , unsigned long frameCount
+                , const PaStreamCallbackTimeInfo *timeInfo
+                , PaStreamCallbackFlags statusFlags
+                , void *userData)
+{
+    PaError e;
+    size_t w, r;
+
+    /* really nasty hack! this might block, leading to dropped audio frames */
+    if(direction == recDirection) {
+        w = fwrite(input, 1, frameCount * 2, stdout);
+    } else {
+        r = fread(output, 1, frameCount * 2, stdin);
+    }
+
+    return paContinue;
+}
+
+
 int open_capture_stream(int deviceIndex, double latency, double rate)
 {
     PaStreamParameters inParams = {
@@ -111,7 +133,7 @@ int open_capture_stream(int deviceIndex, double latency, double rate)
                                 , rate
                                 , 0 // framesPerBuffer
                                 , paNoFlag // flags
-                                , NULL
+                                , &stream_callback
                                 , NULL);
     if(err != paNoError) {
         fprintf(stderr, "PortAudio error while opening stream: %s\n"
@@ -121,59 +143,4 @@ int open_capture_stream(int deviceIndex, double latency, double rate)
     }
 
     return 0;
-}
-
-int read_stream()
-{
-    char buffer[sizeof(uint16_t) * sampleBufferSize];
-
-    PaError e;
-    size_t w;
-
-    Pa_StartStream(stream);
-
-    for(;;) {
-        do {
-            e = Pa_ReadStream(stream, buffer, sampleBufferSize);
-        } while(e == paOutputUnderflowed);
-
-        w = fwrite(buffer, 1, sizeof(buffer), stdout);
-
-        // todo resume writing if less than sizeof(buffer) bytes are written
-
-        if(e != paNoError) {
-            fprintf(stderr, "PortAudio error while reading stream: %s\n"
-                    , Pa_GetErrorText(e));
-
-            return e;
-        }
-
-        w = fwrite(buffer, 1, sizeof(buffer), stdout);
-    }
-}
-
-int write_stream()
-{
-    char buffer[sizeof(uint16_t) * sampleBufferSize];
-
-    PaError e;
-    size_t r;
-
-    Pa_StartStream(stream);
-
-    for(;;) {
-        r = fread(buffer, 1, sizeof(buffer), stdin);
-        e = Pa_WriteStream(stream, buffer, sampleBufferSize);
-
-        // todo resume writing if less than sizeof(buffer) bytes are written
-
-        if(e != paNoError) {
-            fprintf(stderr, "PortAudio error while writing to stream: %s\n"
-                    , Pa_GetErrorText(e));
-
-            return e;
-        }
-    }
-
-
 }
