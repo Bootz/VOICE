@@ -2,7 +2,7 @@
 
 #include <speex/speex.h>
 
-int main()
+int main(int argc, char** argv)
 {
     SpeexBits bits;
     void *enc_state;
@@ -31,6 +31,11 @@ int main()
                           , frame_size
                           , stdin);
 
+        if(feof(stdin) > 0 || ferror(stdin) > 0) {
+            printf("%s terminating, EOF or input stream error encountered", argv[0]);
+            return 0;
+        }
+
         speex_bits_reset(&bits);
         speex_encode_int(enc_state, input_frames, &bits);
         nBytes = speex_bits_write(&bits, buffer, sizeof(buffer));
@@ -39,6 +44,12 @@ int main()
 
         fwrite(&nBytes, sizeof(nBytes), 1, stdout);
         fwrite(buffer, 1, nBytes, stdout);
+
+        if(feof(stdin) > 0 || ferror(stdin) > 0) {
+            printf("%s terminating, EOF or output stream error encountered", argv[0]);
+            return 0;
+        }
+
         fflush(stdout);
     }
 

@@ -5,7 +5,6 @@
 #include <portaudio.h>
 
 #define sampleRate 8000.0 * 2
-#define sampleBufferSize 100
 
 #define playDirection 1
 #define recDirection -1
@@ -51,9 +50,17 @@ int main(int argc, char** argv)
                         , deviceInfo->defaultLowInputLatency
                         , sampleRate);
 
+<<<<<<< HEAD
     direction == playDirection ? write_stream() : read_stream();
 
     Pa_Terminate();
+=======
+    Pa_StartStream(stream);
+
+    for(;;) {
+        Pa_Sleep(10000);
+    }
+>>>>>>> 61196fec5364952cd4951badd0810fe095549f84
 }
 
 int enumerate_apis()
@@ -85,6 +92,30 @@ int enumerate_apis()
     return 0;
 }
 
+<<<<<<< HEAD
+=======
+int stream_callback(const void *input
+                , void *output
+                , unsigned long frameCount
+                , const PaStreamCallbackTimeInfo *timeInfo
+                , PaStreamCallbackFlags statusFlags
+                , void *userData)
+{
+    PaError e;
+    size_t w, r;
+
+    /* really nasty hack! this might block, leading to dropped audio frames */
+    if(direction == recDirection) {
+        w = fwrite(input, 1, frameCount * 2, stdout);
+    } else {
+        r = fread(output, 1, frameCount * 2, stdin);
+    }
+
+    return paContinue;
+}
+
+
+>>>>>>> 61196fec5364952cd4951badd0810fe095549f84
 int open_capture_stream(int deviceIndex, double latency, double rate)
 {
     PaStreamParameters inParams = {
@@ -111,7 +142,11 @@ int open_capture_stream(int deviceIndex, double latency, double rate)
                                 , rate
                                 , 0 // framesPerBuffer
                                 , paNoFlag // flags
+<<<<<<< HEAD
                                 , NULL
+=======
+                                , &stream_callback
+>>>>>>> 61196fec5364952cd4951badd0810fe095549f84
                                 , NULL);
     if(err != paNoError) {
         fprintf(stderr, "PortAudio error while opening stream: %s\n"
@@ -122,6 +157,7 @@ int open_capture_stream(int deviceIndex, double latency, double rate)
 
     return 0;
 }
+<<<<<<< HEAD
 
 int read_stream()
 {
@@ -175,3 +211,5 @@ int write_stream()
 
 
 }
+=======
+>>>>>>> 61196fec5364952cd4951badd0810fe095549f84
