@@ -10,16 +10,16 @@ export port="1337"
 if [ ! $NO_PULSE ]; then
 ### PulseAudio ###
 
-echo "Pulse"
+echo "Using PulseAudio"
 
 # local -> remote
 parec --latency-msec=1 --process-time-msec=1 --raw --format=s16le --rate=8000 \
-    | ./spxenc \
+    | ./spxenc 2> /dev/null \
     | ./voice-net.js --host $remoteHost --port $port &
 
 # remote -> local
 ./voice-net.js  --port $port \
-    | ./spxdec \
+    | ./spxdec 2> /dev/null \
     | paplay --raw --rate=8000 --format=s16le --latency-msec=1 --process-time-msec=1
 else
     echo "Not implemented yet."
