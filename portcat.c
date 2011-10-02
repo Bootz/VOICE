@@ -98,9 +98,9 @@ int stream_callback(const void *input
 
     /* really nasty hack! this might block, leading to dropped audio frames */
     if(direction == recDirection) {
-        w = fwrite(input, 1, frameCount * 2, stdout);
+        w = fwrite(input, 1, frameCount * sizeof(uint16_t), stdout);
     } else {
-        r = fread(output, 1, frameCount * 2, stdin);
+        r = fread(output, 1, frameCount * sizeof(uint16_t), stdin);
     }
 
     return paContinue;
