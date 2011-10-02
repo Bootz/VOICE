@@ -50,6 +50,7 @@ in=$1; out=$2; shift; shift
 
 # local -> remote
 ./portcat $in rec \
+    | ./jitter-buffer \
     | ./spxenc 2> /dev/null \
     | ./voice-net.js --host $remoteHost --port $port &
 
