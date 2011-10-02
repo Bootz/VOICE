@@ -12,8 +12,8 @@ EOF
     exit 1
 fi
 
-export remoteHost=$1
-export port=$2
+remoteHost=$1
+port=$2
 shift; shift
 
 if [ ! $NO_PULSE ]; then
