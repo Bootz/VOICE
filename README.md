@@ -9,6 +9,12 @@ Building
 
 See build.sh, just compiling everything while linking to the needed libs.
 
+Dependencies
+------------
+
+* PortAudio (On non-PulseAudio systems)
+* libspeex
+
 Using
 =====
 
