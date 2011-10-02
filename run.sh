@@ -4,8 +4,17 @@ which pacat > /dev/null; if [ ! $? -eq 0 ]; then
     export NO_PULSE="true"
 fi
 
-export remoteHost="127.0.0.1"
-export port="1337"
+if [[ $# -ne 2 ]]; then
+    echo <<EOF
+Usage:
+    ./run.sh [remote host] [port]
+EOF
+    exit 1
+fi
+
+export remoteHost=$1
+export port=$2
+shift; shift
 
 if [ ! $NO_PULSE ]; then
 ### PulseAudio ###
