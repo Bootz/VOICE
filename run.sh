@@ -30,6 +30,29 @@ parec --latency-msec=1 --process-time-msec=1 --raw --format=s16le --rate=8000 \
 ./voice-net.js  --port $port \
     | ./spxdec 2> /dev/null \
     | paplay --raw --rate=8000 --format=s16le --latency-msec=1 --process-time-msec=1
+
 else
-    echo "Not implemented yet."
+
+echo "Non-Pulse"
+
+if [[ $# -ne 2 ]]; then
+    echo <<EOF
+Non-Pulse usage:
+    ./runsh [remote host] [port] [input device] [output device]"
+EOF
+    exit 1
+fi
+
+in=$1; out=$2; shift; shift
+
+# local -> remote
+./portcat $in rec \
+    | ./spxenc 2> /dev/null \
+    | ./voice-net.js --host $remoteHost --port $port &
+
+# remote -> local
+./voice-net.js  --port $port \
+    | ./spxdec 2> /dev/null \
+    | ./portcat $out play
+
 fi
