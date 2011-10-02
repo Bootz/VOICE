@@ -4,10 +4,10 @@ which pacat > /dev/null; if [ ! $? -eq 0 ]; then
     export NO_PULSE="true"
 fi
 
-if [[ $# -ne 2 ]]; then
-    echo <<EOF
+if [[ $# -lt 2 ]]; then
+    cat <<EOF
 Usage:
-    ./run.sh [remote host] [port]
+    $0 [remote host] [port]
 EOF
     exit 1
 fi
@@ -36,9 +36,9 @@ else
 echo "Non-Pulse"
 
 if [[ $# -ne 2 ]]; then
-    echo <<EOF
+    cat <<EOF
 Non-Pulse usage:
-    ./runsh [remote host] [port] [input device] [output device]"
+    $0 [remote host] [port] [input device] [output device]"
 EOF
     exit 1
 fi
