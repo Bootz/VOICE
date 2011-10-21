@@ -23,7 +23,6 @@ echo "Using PulseAudio"
 
 # local -> remote
 parec --latency-msec=1 --process-time-msec=1 --raw --format=s16le --rate=8000 \
-    | ./jitter-buffer \
     | ./spxenc 2> /dev/null \
     | ./voice-net.js --host $remoteHost --port $port &
 
@@ -31,8 +30,6 @@ parec --latency-msec=1 --process-time-msec=1 --raw --format=s16le --rate=8000 \
 ./voice-net.js  --port $port \
     | ./spxdec 2> /dev/null \
     | paplay --raw --rate=8000 --format=s16le --latency-msec=1 --process-time-msec=1
-
-exit 0
 
 else
 
@@ -57,7 +54,5 @@ in=$1; out=$2; shift; shift
 ./voice-net.js  --port $port \
     | ./spxdec 2> /dev/null \
     | ./portcat $out play
-
-exit 0
 
 fi
