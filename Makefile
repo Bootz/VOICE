@@ -1,6 +1,6 @@
 
 
-all: spxenc spxdec portcat fec
+all: spxenc spxdec portcat
 
 spxenc: spxenc.c
 	gcc -o spxenc spxenc.c -lspeex
