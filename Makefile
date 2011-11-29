@@ -10,6 +10,3 @@ spxdec: spxdec.c
 
 portcat: portcat.c
 	gcc -o portcat portcat.c -lportaudio
-
-fec: fex.c
-	gcc -o fec fec.c
