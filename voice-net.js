@@ -86,7 +86,9 @@ if(reg_host && user && callee) {
         process.stderr.write(msg);
 
         var state = nat.ready_for_punching(reg, function(err, dsock, address){
+            if(err) { console.error('FAIL :((('); process.exit(1) }
 
+            console.error('WIN!');
             socket = dsock;
             port = address;
 
@@ -101,7 +103,7 @@ if(reg_host && user && callee) {
             }, function(err){
                 if(err) { console.error('FAILED :(('); process.exit(1); }
 
-                console.error('WIN!');
+                process.stderr.write('got ip..');
                 nat.punch(state, callee);
             });
         });
