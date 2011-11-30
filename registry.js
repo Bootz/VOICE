@@ -102,7 +102,7 @@ server.on('connection', function(socket){
             }
 
         } catch(e) {
-            socket.write('%error|' + e.message + '\n');
+            socket.write('%'+cmd+';error|' + e.message + '\n');
             console.log('%s caused an error: %s while / %s'
                         , user, e.message, line && line.input);
         }

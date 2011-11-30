@@ -39,31 +39,73 @@ if(reg_host && user && callee) {
 
     var reg = net.connect(6666, 'darkboxed.org');
     registry.init(reg);
-    registry.register(reg, { user: user });
-
-    var state = nat.ready_for_punching(reg, function(err, dsock, address){
+    registry.register(reg, { user: user }, function(err){
         if(err) {
             console.error('FAIL :\'(');
-            throw err;
+            return error(err);
         }
 
-        socket = dsock;
-        port = address;
-
         console.error('Success!');
-
-        do_voice();
+        try_signal();
     });
 
-    nat.get_ip(reg, state.dsock, function(err, address){
-        registry.register(reg, {
-            user: user,
-            address: address.addr,
-            port: address.port
+    function try_signal(){
+        var msg = util.format('Trying to signal %s..', callee);
+        process.stderr.write(msg);
+
+        registry.signalcb(reg, callee, ['presence', 'online'].join(','),function(err){
+            if(err) {
+                console.error('not registered');
+                wait_signal();
+            } else {
+                console.error('Success!');
+                setup_connection();
+            }
+        });
+    }
+
+    function wait_signal(){
+        var msg = util.format('Waiting for %s to signal..', callee);
+        process.stderr.write(msg);
+
+        reg.on('signal', function(user, message){
+            console.log('#', user, message);
+            var message = message.split(',');
+            var subject = message.shift();
+            var arg = message.shift();
+
+            if(user == callee && subject == 'persence' && arg == 'online') {
+                console.error('He\'s here!');
+                setup_connection();
+            }
+        });
+    }
+
+    function setup_connection(){
+        var msg = util.format('Punching that fucking NAT..');
+        process.stderr.write(msg);
+
+        var state = nat.ready_for_punching(reg, function(err, dsock, address){
+
+            socket = dsock;
+            port = address;
+
+            do_voice();
         });
 
-        nat.punch(state, callee);
-    });
+        nat.get_ip(reg, state.dsock, function(err, address){
+            registry.register(reg, {
+                user: user,
+                address: address.addr,
+                port: address.port
+            }, function(err){
+                if(err) { console.error('FAILED :(('); process.exit(1); }
+
+                console.error('WIN!');
+                nat.punch(state, callee);
+            });
+        });
+    }
 } else {
     var socket = dgram.createSocket('udp4');
 

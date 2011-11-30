@@ -23,14 +23,37 @@ exports.init = function(sock){
     });
 }
 
-exports.register = function(sock, info){
+exports.register = function(sock, info, callback){
     sock.user = info.user;
+    sock.on('response', function resp(key, args){
+        if(key == 'register;ok') {
+            sock.removeListener('response', resp);
+            callback(null);
+        } else if(key == 'register;error') {
+            sock.removeListener('response', resp);
+            callback(new Error(args));
+        }
+    });
+
     sock.write(
         '%register|'+[info.user,info.address,info.port].join(',') + '\n'
     );
 }
 
 exports.signal = function(sock, user, message){
+    sock.write('%signal|' + [user,message].join(',') + '\n');
+}
+
+exports.signalcb = function(sock, user, message, callback){
+    sock.on('response', function resp(key, args){
+        if(key == 'signal;ok') {
+            sock.removeListener('response', resp);
+            callback(null);
+        } else if(key == 'signal;error') {
+            sock.removeListener('response', resp);
+            callback(new Error(args));
+        }
+    });
     sock.write('%signal|' + [user,message].join(',') + '\n');
 }
 
@@ -47,6 +70,9 @@ exports.info = function(sock, user, callback){
 
             sock.removeListener('response', resp);
             callback(null, {addr: address, port: port});
+        } else if(key == 'info;error') {
+            sock.removeListener('response', resp);
+            callback(new Error(args));
         }
     });
 
