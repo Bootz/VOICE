@@ -71,10 +71,10 @@ EOF
     # local -> remote
     ./portcat $in rec \
         | ./spxenc 2> /dev/null \
-        | ./voice-net.js --host $remoteHost --port $port &
+        > /tmp/VOICE_in &
 
     # remote -> local
-    ./voice-net.js  --port $port \
+    cat /tmp/VOICE_out \
         | ./spxdec 2> /dev/null \
         | ./portcat $out play
 
